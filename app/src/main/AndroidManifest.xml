@@ -5,8 +5,6 @@
         android:label="Productivity Pro App"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
-        <activity android:name=".ui.ProjectTimePicker2" />
-        <activity android:name=".ProjectTimePicker" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
