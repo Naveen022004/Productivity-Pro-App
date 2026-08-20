@@ -1,88 +1,67 @@
 # Productivity Pro App
 
-**Productivity Pro App** is a modern Android application built using **Jetpack Compose** and **Material 3**. It features edge-to-edge UI layouts and interactive time-picker components supporting both 12-hour (AM/PM) and 24-hour formats.
+A clean Android productivity starter app built with Kotlin, Jetpack Compose, and Material 3.
 
----
+## Features
 
-## 🚀 Features
+- Modern Jetpack Compose UI
+- Material 3 components
+- Edge-to-edge Android UI
+- 24-hour time picker (`HH:mm`)
+- 12-hour time picker with AM/PM
+- Android API 24+ support
 
-* **Jetpack Compose UI**: Uses Modern Declarative UI components with Material 3 styling.
-* **Time Selection Components**:
-  * **24-Hour Time Picker**: Select and format time in a standard 24-hour layout (`HH:mm`).
-  * **12-Hour AM/PM Time Picker**: Select and format time with 12-hour AM/PM support (`hh:mm AM/PM`).
-* **Edge-to-Edge Layout**: Fully integrated edge-to-edge design using modern Android activity APIs.
+## Tech Stack
 
----
+- Kotlin 2.0.21
+- Jetpack Compose
+- Material 3
+- Android Gradle Plugin 8.9.2
+- Gradle 8.11.1
+- Java 17
+- Compile/Target SDK 36
+- Minimum SDK 24
 
-## 🛠️ Project Configuration & Tech Stack
-
-* **Language**: Kotlin
-* **UI Toolkit**: Jetpack Compose
-* **Design System**: Material Design 3
-* **Minimum SDK**: 24 (Android 7.0)
-* **Compile / Target SDK**: 36 (Android 14+)
-* **Java Version Compatibility**: Java 11
-* **Java Toolchain Version**: JDK 21
-* **Build System**: Gradle with Version Catalogs (`libs.versions.toml`)
-
----
-
-## 📂 Key File Architecture
+## Project Structure
 
 ```text
-app/src/main/java/com/example/productivityproapp/
-├── MainActivity.kt               # Entry point with default greeting screen
-├── ProjectTimePicker.kt          # 24-Hour time picker component implementation
-└── ui/
-    └── ProjectTimePicker2.kt     # 12-Hour (AM/PM) time picker implementation
-
+Productivity-Pro-App/
+├── app/
+│   ├── build.gradle.kts
+│   ├── proguard-rules.pro
+│   └── src/main/
+│       ├── AndroidManifest.xml
+│       └── java/com/example/productivityproapp/
+│           ├── MainActivity.kt
+│           ├── ProjectTimePicker.kt
+│           └── ui/
+│               ├── ProjectTimePicker2.kt
+│               └── theme/Theme.kt
+├── gradle/libs.versions.toml
+├── build.gradle.kts
+└── setting.gradle.kts
 ```
 
----
+## Open in Android Studio
 
-## 📋 Prerequisites
+1. Clone the repository.
+2. Open the repository root in Android Studio.
+3. Allow Gradle to sync.
+4. Install Android SDK 36 if prompted.
+5. Run the `app` configuration on an emulator or Android device.
 
-Before setting up the project, make sure you have:
+## Build from the command line
 
-* **Android Studio**: Ladybug / Iguana or newer recommended.
-* **JDK**: JDK 21 configured (managed automatically via the Foojay Toolchain plugin).
-* **Android SDK**: SDK Platform 36 installed.
+The repository includes a GitHub Actions build that validates the project with Gradle 8.11.1 and JDK 17.
 
----
-
-## 🔧 Getting Started
-
-### 1. Clone the Repository
+If Gradle is installed locally:
 
 ```bash
-git clone [https://github.com/your-username/Productivity-Pro-App.git](https://github.com/your-username/Productivity-Pro-App.git)
-cd Productivity-Pro-App
-
+gradle :app:assembleDebug
 ```
 
-### 2. Open in Android Studio
+The generated APK is located at:
 
-1. Launch Android Studio.
-2. Select **Open** and choose the cloned repository folder.
-3. Allow Gradle to synchronize dependencies.
-
-### 3. Build & Run
-
-* Connect a physical Android device or launch an Emulator running Android API 24 or higher.
-* Click **Run** (`Shift + F10`) or select target activities (`MainActivity`, `ProjectTimePicker`, or `ProjectTimePicker2`).
-
----
-
-## 🧪 Testing
-
-The app comes configured with basic testing libraries:
-
-* **Unit Tests**: JUnit
-* **Instrumentation / UI Tests**: Espresso, AndroidX JUnit, and Compose UI Test JUnit4
-
-Run unit tests via CLI:
-
-```bash
-./gradlew test
-
+```text
+app/build/outputs/apk/debug/app-debug.apk
 ```
