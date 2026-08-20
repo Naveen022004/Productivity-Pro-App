@@ -2,12 +2,12 @@ name: Android Build
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ci/gradle-wrapper-build" ]
   pull_request:
     branches: [ "main" ]
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build:
@@ -25,7 +25,7 @@ jobs:
           cache: gradle
 
       - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+        uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: '8.11.1'
 
@@ -35,11 +35,39 @@ jobs:
       - name: Install Android SDK 35
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
-      - name: Verify Gradle environment
-        run: |
-          java -version
-          gradle --version
-          sdkmanager --list_installed | grep -E 'platforms;android-35|build-tools;35.0.0' || true
+      - name: Generate Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.11.1 --distribution-type bin
+
+      - name: Verify Gradle Wrapper
+        run: ./gradlew --version
 
       - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace --no-daemon
+        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Build release APK
+        run: ./gradlew :app:assembleRelease --stacktrace --no-daemon
+
+      - name: Commit generated Gradle Wrapper
+        if: github.event_name == 'push' && github.ref == 'refs/heads/ci/gradle-wrapper-build'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- gradlew gradlew.bat gradle/wrapper/gradle-wrapper.jar gradle/wrapper/gradle-wrapper.properties
+          if git diff --cached --quiet; then
+            echo "Gradle Wrapper is already committed."
+          else
+            git commit -m "build: add Gradle Wrapper"
+            git push origin HEAD:ci/gradle-wrapper-build
+          fi
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: productivity-pro-debug
+          path: app/build/outputs/apk/debug/*.apk
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: productivity-pro-release
+          path: app/build/outputs/apk/release/*.apk
