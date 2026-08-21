@@ -19,7 +19,7 @@ A clean Android productivity starter app built with Kotlin, Jetpack Compose, and
 - Android Gradle Plugin 8.9.2
 - Gradle 8.11.1
 - Java 17
-- Compile/Target SDK 36
+- Compile/Target SDK 35
 - Minimum SDK 24
 
 ## Project Structure
@@ -39,7 +39,7 @@ Productivity-Pro-App/
 │               └── theme/Theme.kt
 ├── gradle/libs.versions.toml
 ├── build.gradle.kts
-└── setting.gradle.kts
+└── settings.gradle.kts
 ```
 
 ## Open in Android Studio
@@ -47,7 +47,7 @@ Productivity-Pro-App/
 1. Clone the repository.
 2. Open the repository root in Android Studio.
 3. Allow Gradle to sync.
-4. Install Android SDK 36 if prompted.
+4. Install Android SDK 35 if prompted.
 5. Run the `app` configuration on an emulator or Android device.
 
 ## Build from the command line
