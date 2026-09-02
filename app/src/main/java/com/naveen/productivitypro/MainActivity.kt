@@ -98,7 +98,8 @@ private fun ProductivityApp(vm: ProductivityViewModel = viewModel()) {
                         TaskCard(task,
                             onToggle = {
                                 vm.toggleTask(task)
-                                if (!task.completed) ReminderScheduler.cancel(context, task.id)
+                                if (task.completed) ReminderScheduler.schedule(context, task)
+                                else ReminderScheduler.cancel(context, task.id)
                             },
                             onDelete = {
                                 ReminderScheduler.cancel(context, task.id)
