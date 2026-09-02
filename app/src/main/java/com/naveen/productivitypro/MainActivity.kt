@@ -34,7 +34,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -46,6 +45,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.naveen.productivitypro.data.Task
 import com.naveen.productivitypro.notifications.ReminderScheduler
@@ -55,21 +55,14 @@ import java.text.DateFormat
 import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
-    private val notificationPermissionLauncher = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { }
+    private val notificationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            ProductivityProAppTheme {
-                ProductivityApp()
-            }
-        }
+        setContent { ProductivityProAppTheme { ProductivityApp() } }
         if (Build.VERSION.SDK_INT >= 33 &&
-            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
-        ) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
     }
@@ -84,17 +77,14 @@ private fun ProductivityApp(vm: ProductivityViewModel = viewModel()) {
 
     Scaffold(
         topBar = { TopAppBar(title = { Text("Productivity Pro") }) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showAddTask = true }) { Text("+") }
-        }
+        floatingActionButton = { FloatingActionButton(onClick = { showAddTask = true }) { Text("+") } }
     ) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 16.dp)) {
             Spacer(Modifier.height(16.dp))
             val completed = tasks.count { it.completed }
             Text("Today", style = MaterialTheme.typography.headlineMedium)
-            Text("$completed of ${tasks.size} tasks completed", style = MaterialTheme.typography.bodyMedium)
+            Text("$completed of ${tasks.size} tasks completed")
             Spacer(Modifier.height(16.dp))
-
             if (tasks.isEmpty()) {
                 Card(Modifier.fillMaxWidth()) {
                     Column(Modifier.padding(24.dp)) {
@@ -105,36 +95,30 @@ private fun ProductivityApp(vm: ProductivityViewModel = viewModel()) {
             } else {
                 LazyColumn(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     items(tasks, key = { it.id }) { task ->
-                        TaskCard(
-                            task = task,
+                        TaskCard(task,
                             onToggle = {
                                 vm.toggleTask(task)
-                                if (task.completed) ReminderScheduler.cancel(context, task.id)
+                                if (!task.completed) ReminderScheduler.cancel(context, task.id)
                             },
                             onDelete = {
                                 ReminderScheduler.cancel(context, task.id)
                                 vm.deleteTask(task)
-                            }
-                        )
+                            })
                     }
                 }
             }
         }
     }
 
-    if (showAddTask) {
-        AddTaskDialog(
-            onDismiss = { showAddTask = false },
-            onSave = { title, notes, dueAt ->
-                vm.addTask(title, notes, dueAt) { id ->
-                    if (dueAt != null) {
-                        ReminderScheduler.schedule(context, Task(id = id, title = title, notes = notes, dueAtMillis = dueAt))
-                    }
-                }
-                showAddTask = false
+    if (showAddTask) AddTaskDialog(
+        onDismiss = { showAddTask = false },
+        onSave = { title, notes, dueAt ->
+            vm.addTask(title, notes, dueAt) { id ->
+                dueAt?.let { ReminderScheduler.schedule(context, Task(id = id, title = title, notes = notes, dueAtMillis = it)) }
             }
-        )
-    }
+            showAddTask = false
+        }
+    )
 }
 
 @Composable
@@ -143,15 +127,10 @@ private fun TaskCard(task: Task, onToggle: () -> Unit, onDelete: () -> Unit) {
         Row(Modifier.fillMaxWidth().padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
             Checkbox(checked = task.completed, onCheckedChange = { onToggle() })
             Column(Modifier.weight(1f).padding(horizontal = 8.dp)) {
-                Text(
-                    task.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None
-                )
+                Text(task.title, style = MaterialTheme.typography.titleMedium,
+                    textDecoration = if (task.completed) TextDecoration.LineThrough else TextDecoration.None)
                 if (task.notes.isNotBlank()) Text(task.notes, style = MaterialTheme.typography.bodySmall)
-                task.dueAtMillis?.let {
-                    Text("Due: ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(it)}")
-                }
+                task.dueAtMillis?.let { Text("Due: ${DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(it)}") }
             }
             TextButton(onClick = onDelete) { Text("Delete") }
         }
@@ -171,11 +150,10 @@ private fun AddTaskDialog(onDismiss: () -> Unit, onSave: (String, String, Long?)
         val calendar = Calendar.getInstance()
         DatePickerDialog(context, { _, year, month, day ->
             TimePickerDialog(context, { _, hour, minute ->
-                val selected = Calendar.getInstance().apply {
+                dueAt = Calendar.getInstance().apply {
                     set(year, month, day, hour, minute, 0)
                     set(Calendar.MILLISECOND, 0)
-                }
-                dueAt = selected.timeInMillis
+                }.timeInMillis
                 hasDueDate = true
             }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), true).show()
         }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show()
@@ -186,34 +164,16 @@ private fun AddTaskDialog(onDismiss: () -> Unit, onSave: (String, String, Long?)
         title = { Text("Add task") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                OutlinedTextField(
-                    value = title,
-                    onValueChange = { title = it; error = false },
-                    label = { Text("Task title") },
-                    singleLine = true,
-                    isError = error,
-                    supportingText = { if (error) Text("Enter a task title") }
-                )
-                OutlinedTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = { Text("Notes (optional)") },
-                    minLines = 2
-                )
-                OutlinedButton(onClick = ::chooseDateTime) {
-                    Text(if (hasDueDate) "Change reminder" else "Add reminder")
-                }
-                if (hasDueDate) {
-                    Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(dueAt))
-                }
+                OutlinedTextField(title, { title = it; error = false }, label = { Text("Task title") }, singleLine = true, isError = error,
+                    supportingText = { if (error) Text("Enter a task title") })
+                OutlinedTextField(notes, { notes = it }, label = { Text("Notes (optional)") }, minLines = 2)
+                OutlinedButton(onClick = ::chooseDateTime) { Text(if (hasDueDate) "Change reminder" else "Add reminder") }
+                if (hasDueDate) Text(DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.SHORT).format(dueAt))
             }
         },
-        confirmButton = {
-            Button(onClick = {
-                if (title.isBlank()) error = true
-                else onSave(title.trim(), notes.trim(), if (hasDueDate) dueAt else null)
-            }) { Text("Save") }
-        },
+        confirmButton = { Button(onClick = {
+            if (title.isBlank()) error = true else onSave(title.trim(), notes.trim(), if (hasDueDate) dueAt else null)
+        }) { Text("Save") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } }
     )
 }
