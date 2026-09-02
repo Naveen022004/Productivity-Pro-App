@@ -1,4 +1,4 @@
-name: Android Build
+name: Android CI
 
 on:
   push:
@@ -12,7 +12,6 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,22 +23,23 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
-
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK 35
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: Install Android SDK 36
+        run: sdkmanager "platforms;android-36" "build-tools;36.0.0"
 
-      - name: Verify Gradle environment
-        run: |
-          java -version
-          gradle --version
-          sdkmanager --list_installed | grep -E 'platforms;android-35|build-tools;35.0.0' || true
+      - name: Validate Gradle wrapper
+        run: ./gradlew --version
+
+      - name: Run unit tests
+        run: ./gradlew test --stacktrace --no-daemon
+
+      - name: Run lint
+        run: ./gradlew lint --stacktrace --no-daemon
 
       - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace --no-daemon
+        run: ./gradlew :app:assembleDebug --stacktrace --no-daemon
+
+      - name: Build release App Bundle
+        run: ./gradlew :app:bundleRelease --stacktrace --no-daemon
