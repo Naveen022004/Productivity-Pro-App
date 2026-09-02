@@ -1,0 +1,20 @@
+# Android / Gradle
+.gradle/
+build/
+*/build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+.externalNativeBuild/
+.cxx/
+
+# Signing material - NEVER commit release keys or passwords
+*.jks
+*.keystore
+keystore.properties
+
+# OS
+.DS_Store
+Thumbs.db
